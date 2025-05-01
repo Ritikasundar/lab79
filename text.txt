@@ -1,0 +1,976 @@
+ListView:
+adapter : ArrayAdapter<String>
+adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, ArrayList<String>())
+ eventsListView.adapter = adapter
+ adapter.add("${event.id} - ${event.name} - ${event.location}")
+
+Table view:
+ val tableRow = TableRow(this)
+ val tvDescription = TextView(this)
+tableRow.addView(tvDescription)
+ tableLayout.addView(tableRow)
+
+
+
+Explicit Intent:
+val intent = Intent(this, ContactActivity::class.java)
+                startActivity(intent)
+
+Menu:
+inside res/menu place menu files
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+Options menu:
+
+override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.options_menu, menu)
+        return true
+    }
+ override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when(item.itemId){
+            R.id.profile -> {
+                val intent = Intent(this, ProfileActivity::class.java)
+                startActivity(intent)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+PopupMenu:
+contact_btn.setOnClickListener { view ->
+            showPopup(view)
+        }
+private fun showPopup(view: View) {
+        val popup = PopupMenu(this, view)
+        popup.menuInflater.inflate(R.menu.popup_menu, popup.menu)
+        popup.setOnMenuItemClickListener { item ->
+            when(item.itemId) {
+                R.id.sms -> {
+                    sendSMS()
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
+    }
+
+Context Menu:
+registerForContextMenu(rate_btn)
+override fun onCreateContextMenu(
+        menu: ContextMenu?,
+        v: View?,
+        menuInfo: ContextMenu.ContextMenuInfo?
+    ) {
+        super.onCreateContextMenu(menu, v, menuInfo)
+        menuInflater.inflate(R.menu.context_menu, menu)
+    }
+
+    override fun onContextItemSelected(item: MenuItem): Boolean {
+        return when(item.itemId) {
+            R.id.r4 -> {
+                Toast.makeText(this, "Thanks for giving 4 stars", Toast.LENGTH_SHORT).show()
+                true
+            }
+            else -> super.onContextItemSelected(item)
+        }
+    }
+
+SharedPreferences:
+
+val sharedPref = getSharedPreferences("userPrefs", Context.MODE_PRIVATE)
+        donate.setOnClickListener({
+            val editor = sharedPref.edit()
+            val u = name.text.toString()
+            val p = phn.text.toString()
+            editor.putString("username",u)
+            editor.putString("phn",p)
+            editor.apply()
+                    })
+    }
+
+val sharedPref = getSharedPreferences("userPrefs", Context.MODE_PRIVATE)
+        val name = sharedPref.getString("username", "GUEST")
+        val phn = sharedPref.getString("phn", "NOT FOUND")
+
+
+Status Notification:
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+private val CHANNEL_ID = "simple"
+private val NOTIFICATION_ID = 2324
+ val nbtn = findViewById<Button>(R.id.notifybtn)
+        createNotification()
+        nbtn.setOnClickListener{
+            sendNotification()
+        }
+private fun createNotification(){
+        if(Build.VERSION.SDK_INT>Build.VERSION_CODES.O){
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "simple_channel",
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
+            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(channel)
+        }
+    }
+    private fun sendNotification(){
+        val notification = NotificationCompat.Builder(this,CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle("Sample Notification")
+            .setContentText("This is a sample Notification")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(NOTIFICATION_ID,notification)
+    }
+
+
+Dialogues(Date,Time,Progressbar)
+Date and Time:
+val cal = Calendar.getInstance()
+
+        dbtn.setOnClickListener {
+            val year = cal.get(Calendar.YEAR)
+            val month = cal.get(Calendar.MONTH)
+            val day = cal.get(Calendar.DAY_OF_MONTH)
+            DatePickerDialog(this, { _, y, m, d ->
+                dtxt.text = "$d/${m+1}/$y"
+            }, year, month, day).show()
+        }
+
+        tbtn.setOnClickListener {
+            val hour = cal.get(Calendar.HOUR_OF_DAY)
+            val min = cal.get(Calendar.MINUTE)
+            TimePickerDialog(this, { _, h, m ->
+                ttxt.text = "$h:$m"
+            }, hour, min, true).show()
+        }
+
+Progressbar:
+ progress.progress = 0
+Thread {
+                for (i in 1..100) {
+                    Thread.sleep(30)
+                    runOnUiThread {
+                        progress.progress = i
+                    }
+                }.start()
+
+AlertDialog
+
+override fun onBackPressed() {
+        super.onBackPressed()
+        val builder = AlertDialog.Builder(this)
+        with(builder){
+            setTitle("Exit app")
+            setMessage("Are you sure you want to exit?")
+            setPositiveButton("Yes"){_,_ ->finishAffinity()}
+            setNegativeButton("No",null)
+            setCancelable(true)
+            show()
+        }
+    }
+
+Geocoder:
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+val la = lat.text.toString().toDoubleOrNull()
+val lo = lon.text.toString().toDoubleOrNull()
+val geocoder = Geocoder(this, Locale.getDefault())
+                try {
+                    val addresses = geocoder.getFromLocation(la, lo, 1)
+                        if (addresses != null && addresses.isNotEmpty()) {
+                            val address = addresses[0].getAddressLine(0)
+                            result.text = "Address : $address"
+                        } else {
+                            Toast.makeText(this, "No address found for this location", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } catch (e: Exception) {
+                        Toast.makeText(this, "Error occurred in fetching address: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+
+Location Provider:
+
+   in build.gradle app levl ->  implementation("com.google.android.gms:play-services-location:21.3.0")
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private val LOCATION_PERMISSION_REQUEST_CODE = 1001
+fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+private fun getCurrentLocation() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_REQUEST_CODE
+            )
+            return
+        }
+
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location ->
+                if (location != null) {
+                    // Update UI with location data
+                    val lat = findViewById<EditText>(R.id.latText)
+                    val lon = findViewById<EditText>(R.id.lonText)
+                    lat.setText(location.latitude.toString())
+                    lon.setText(location.longitude.toString())
+
+                    Toast.makeText(this, "Location retrieved successfully", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "Unable to get current location", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error getting location: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getCurrentLocation()
+            } else {
+                Toast.makeText(this, "Permission denied. Cannot get location.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+Map:
+
+in build.gradle(app level) -> implementation ("org.osmdroid:osmdroid-android:6.1.14")
+
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+private lateinit var map: MapView
+    private lateinit var geocoder: Geocoder
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val ctx = applicationContext
+        Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx))
+        setContentView(R.layout.activity_map)
+        map = findViewById(R.id.map)
+        map.setTileSource(TileSourceFactory.MAPNIK)
+        map.setMultiTouchControls(true)
+        map.controller.setZoom(14.0)
+        geocoder = Geocoder(this, Locale.getDefault())
+        addMarkerByLocationName("No:336,Thuttukadai vanniya konar lane,North Masi Stree,Madurai-625001", "Sakthi's House")
+        addMarkerByLocationName("Thiagarajar College Of Engineering,Thiruparankundram,Madurai-625001", "Sakthi's College")
+    }
+    private fun addMarkerByLocationName(locationName: String, description: String) {
+        try {
+            val addresses = geocoder.getFromLocationName(locationName, 1)
+            if (addresses != null && addresses.size > 0) {
+                val address = addresses[0]
+                val geoPoint = GeoPoint(address.latitude, address.longitude)
+                map.controller.setCenter(geoPoint)
+                val marker = Marker(map)
+                marker.position = geoPoint
+                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                marker.title = locationName
+                marker.snippet = description
+                map.overlays.add(marker)
+                Toast.makeText(this, "Found: $locationName", Toast.LENGTH_SHORT).show()
+            } else {
+                val defaultPoint = GeoPoint(40.7128, -74.0060) // NYC coordinates
+                map.controller.setCenter(defaultPoint)
+                val marker = Marker(map)
+                marker.position = defaultPoint
+                marker.title = "Default Location"
+                marker.snippet = "Could not find: $locationName"
+                map.overlays.add(marker)
+            }
+        } catch (e: IOException) {
+            val defaultPoint = GeoPoint(40.7128, -74.0060)
+            map.controller.setCenter(defaultPoint)
+            val marker = Marker(map)
+            marker.position = defaultPoint
+            marker.title = "Default Location"
+            map.overlays.add(marker)
+        }
+    }
+    override fun onResume() {
+        super.onResume()
+        map.onResume()
+    }
+    override fun onPause() {
+        super.onPause()
+        map.onPause()
+    }
+
+
+<org.osmdroid.views.MapView
+            android:id="@+id/map"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+
+SQLLITE:
+
+private lateinit var adapter: ArrayAdapter<String>
+    private lateinit var dbHelper: EventDatabaseHelper
+ dbHelper = EventDatabaseHelper(this)
+
+        nameEditText = findViewById(R.id.editTextName)
+        locationEditText = findViewById(R.id.editTextLocation)
+        addButton = findViewById(R.id.buttonAdd)
+        eventsListView = findViewById(R.id.listViewEvents)
+        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, ArrayList<String>())
+        eventsListView.adapter = adapter
+        loadEvents()
+
+        addButton.setOnClickListener {
+            addEvent()
+        }
+
+        eventsListView.setOnItemLongClickListener { _, _, position, _ ->
+            val eventString = adapter.getItem(position) ?: return@setOnItemLongClickListener false
+            val id = eventString.split(" - ")[0].toInt()
+            deleteEvent(id)
+            true
+        }
+    }
+
+    private fun addEvent() {
+        val name = nameEditText.text.toString().trim()
+        val location = locationEditText.text.toString().trim()
+
+        if (name.isEmpty() || location.isEmpty()) {
+            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val id = dbHelper.addEvent(name, location)
+
+        if (id != -1L) {
+            nameEditText.text.clear()
+            locationEditText.text.clear()
+
+            loadEvents()
+
+            Toast.makeText(this, "Event added successfully", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Failed to add event", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun deleteEvent(id: Int) {
+        val deleted = dbHelper.deleteEvent(id)
+
+        if (deleted > 0) {
+            loadEvents()
+            Toast.makeText(this, "Event deleted", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Failed to delete event", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun loadEvents() {
+        adapter.clear()
+
+        val eventsList = dbHelper.getAllEvents()
+
+        for (event in eventsList) {
+            adapter.add("${event.id} - ${event.name} - ${event.location}")
+        }
+
+        adapter.notifyDataSetChanged()
+    }
+}
+
+data class Event(val id: Int, val name: String, val location: String)
+
+class EventDatabaseHelper(context: Context) :
+    SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+
+    companion object {
+        private const val DATABASE_NAME = "events.db"
+        private const val DATABASE_VERSION = 1
+        private const val TABLE_EVENTS = "events"
+        private const val COLUMN_ID = "id"
+        private const val COLUMN_NAME = "name"
+        private const val COLUMN_LOCATION = "location"
+    }
+
+    override fun onCreate(db: SQLiteDatabase) {
+        val createTableSQL = """
+            CREATE TABLE $TABLE_EVENTS (
+                $COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COLUMN_NAME TEXT NOT NULL,
+                $COLUMN_LOCATION TEXT NOT NULL
+            )
+        """.trimIndent()
+
+        db.execSQL(createTableSQL)
+    }
+
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        db.execSQL("DROP TABLE IF EXISTS $TABLE_EVENTS")
+        onCreate(db)
+    }
+
+    fun addEvent(name: String, location: String): Long {
+        val db = this.writableDatabase
+        val values = ContentValues().apply {
+            put(COLUMN_NAME, name)
+            put(COLUMN_LOCATION, location)
+        }
+
+        val id = db.insert(TABLE_EVENTS, null, values)
+        db.close()
+        return id
+    }
+
+    fun deleteEvent(id: Int): Int {
+        val db = this.writableDatabase
+        val result = db.delete(TABLE_EVENTS, "$COLUMN_ID = ?", arrayOf(id.toString()))
+        db.close()
+        return result
+    }
+
+    fun getAllEvents(): List<Event> {
+        val eventsList = ArrayList<Event>()
+        val db = this.readableDatabase
+        val query = "SELECT * FROM $TABLE_EVENTS"
+        val cursor = db.rawQuery(query, null)
+
+        if (cursor.moveToFirst()) {
+            do {
+                val id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))
+                val name = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAME))
+                val location = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_LOCATION))
+
+                val event = Event(id, name, location)
+                eventsList.add(event)
+            } while (cursor.moveToNext())
+        }
+
+        cursor.close()
+        db.close()
+        return eventsList
+    }
+
+
+Firebase:
+
+build.gradle project level -> id("com.google.gms.google-services") version "4.4.2" apply false
+build.gradle app evel - > id("com.google.gms.google-services")
+                                      implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
+
+import com.google.firebase.firestore.FirebaseFirestore
+private lateinit var db: FirebaseFirestore
+
+val contact = hashMapOf(
+            "id" to id,
+            "name" to name,
+            "phoneNumber" to phoneNumber
+        )
+        db.collection("contacts")
+            .document(id)
+            .set(contact)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Contact saved successfully with ID: $id", Toast.LENGTH_SHORT).show()
+                loadContacts()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error saving contact: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+
+private fun loadContacts() {
+        contactsTextView.text = "Loading contacts..."
+        db.collection("contacts")
+            .get()
+            .addOnSuccessListener { result ->
+                val stringBuilder = StringBuilder()
+                if (result.isEmpty) {
+                    stringBuilder.append("No contacts found.")
+                } else {
+                    for (document in result) {
+                        val id = document.getString("id") ?: document.id
+                        val name = document.getString("name") ?: "Unknown"
+                        val phone = document.getString("phoneNumber") ?: "No number"
+                        stringBuilder.append("ID: $id\nName: $name\nPhone: $phone\n\n")
+                    }
+                }
+                contactsTextView.text = stringBuilder.toString()
+            }
+            .addOnFailureListener { e ->
+                contactsTextView.text = "Error loading contacts: ${e.message}"
+            }
+    }
+
+private fun deleteContact() {
+        val idToDelete = deleteIdEditText.text.toString().trim()
+        db.collection("contacts")
+            .document(idToDelete)
+            .delete()
+            .addOnSuccessListener {
+                Toast.makeText(this, "Contact with ID: $idToDelete deleted successfully", Toast.LENGTH_SHORT).show()
+                deleteIdEditText.text.clear()
+                loadContacts()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error deleting contact: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+
+
+private fun findContactById() {
+        val idToFind = updateIdEditText.text.toString().trim()
+        db.collection("contacts")
+            .document(idToFind)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document != null && document.exists()) {
+                    val name = document.getString("name") ?: ""
+                    val phone = document.getString("phoneNumber") ?: ""
+                    updateNameEditText.setText(name)
+                    updatePhoneEditText.setText(phone)
+                    Toast.makeText(this, "Contact found", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "No contact found with ID: $idToFind", Toast.LENGTH_SHORT).show()
+                    updateNameEditText.text.clear()
+                    updatePhoneEditText.text.clear()
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error finding contact: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+
+val updatedContact = hashMapOf(
+            "id" to idToUpdate,
+            "name" to updatedName,
+            "phoneNumber" to updatedPhone
+        )
+        db.collection("contacts")
+            .document(idToUpdate)
+            .set(updatedContact)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Contact updated successfully", Toast.LENGTH_SHORT).show()
+                updateIdEditText.text.clear()
+                updateNameEditText.text.clear()
+                updatePhoneEditText.text.clear()
+                loadContacts()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error updating contact: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+
+
+Audio & Video:
+
+private lateinit var mediaPlayer: MediaPlayer
+private lateinit var videoView: VideoView
+private fun setupAudio() {
+    mediaPlayer = MediaPlayer.create(this, R.raw.audio_file)
+    val playButton = findViewById<Button>(R.id.play_audio_button)
+    playButton.setOnClickListener {
+        if (mediaPlayer.isPlaying) {
+            mediaPlayer.pause()
+            playButton.text = "Play Audio"
+        } else {
+            mediaPlayer.start()
+            playButton.text = "Pause Audio"
+        }
+    }
+    val stopButton = findViewById<Button>(R.id.stop_audio_button)
+    stopButton.setOnClickListener {
+        mediaPlayer.stop()
+        mediaPlayer = MediaPlayer.create(this, R.raw.audio_file)
+        playButton.text = "Play Audio"
+    }
+}
+private fun setupVideo() {
+    videoView = findViewById(R.id.video_view)
+    val videoPath = "android.resource://$packageName/${R.raw.video_file}"
+    videoView.setVideoURI(Uri.parse(videoPath))
+    val playButton = findViewById<Button>(R.id.play_video_button)
+    playButton.setOnClickListener {
+        if (videoView.isPlaying) {
+            videoView.pause()
+            playButton.text = "Play Video"
+        } else {
+            videoView.start()
+            playButton.text = "Pause Video"
+        }
+    }
+    val stopButton = findViewById<Button>(R.id.stop_video_button)
+    stopButton.setOnClickListener {
+        videoView.stopPlayback()
+        videoView.setVideoURI(Uri.parse(videoPath))
+        playButton.text = "Play Video"
+    }
+}
+
+override fun onDestroy() {
+    super.onDestroy()
+    if (::mediaPlayer.isInitialized) {
+        mediaPlayer.release()
+    }
+}
+
+
+Audio & Video:
+
+import android.provider.Settings
+
+make sure inside res/raw audio or video files is there 
+
+private lateinit var mediaPlayer: MediaPlayer
+private lateinit var videoView: VideoView
+private fun setupAudio() {
+    mediaPlayer = MediaPlayer.create(this, R.raw.audio_file)
+    val playButton = findViewById<Button>(R.id.play_audio_button)
+    playButton.setOnClickListener {
+        if (mediaPlayer.isPlaying) {
+            mediaPlayer.pause()
+            playButton.text = "Play Audio"
+        } else {
+            mediaPlayer.start()
+            playButton.text = "Pause Audio"
+        }
+    }
+    val stopButton = findViewById<Button>(R.id.stop_audio_button)
+    stopButton.setOnClickListener {
+        mediaPlayer.stop()
+        mediaPlayer = MediaPlayer.create(this, R.raw.audio_file)
+        playButton.text = "Play Audio"
+    }
+}
+private fun setupVideo() {
+    videoView = findViewById(R.id.video_view)
+    val videoPath = "android.resource://$packageName/${R.raw.video_file}"
+    videoView.setVideoURI(Uri.parse(videoPath))
+    val playButton = findViewById<Button>(R.id.play_video_button)
+    playButton.setOnClickListener {
+        if (videoView.isPlaying) {
+            videoView.pause()
+            playButton.text = "Play Video"
+        } else {
+            videoView.start()
+            playButton.text = "Pause Video"
+        }
+    }
+    val stopButton = findViewById<Button>(R.id.stop_video_button)
+    stopButton.setOnClickListener {
+        videoView.stopPlayback()
+        videoView.setVideoURI(Uri.parse(videoPath))
+        playButton.text = "Play Video"
+    }
+}
+
+override fun onDestroy() {
+    super.onDestroy()
+    if (::mediaPlayer.isInitialized) {
+        mediaPlayer.release()
+    }
+}
+
+Animation
+inside string.xml:
+<string name="icon_description">This is an icon image</string>
+inside res/anim
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:fillAfter="true">
+    <alpha
+        android:duration="1000"
+        android:fromAlpha="0.0"
+        android:toAlpha="1.0" />
+    <scale
+        android:duration="1000"
+        android:fromXScale="0.8"
+        android:fromYScale="0.8"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:toXScale="1.0"
+        android:toYScale="1.0" />
+</set>
+
+
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+        <translate
+            android:duration="800"
+            android:fromYDelta="100%"
+            android:toYDelta="0%" />
+        <alpha
+            android:duration="800"
+            android:fromAlpha="0.0"
+            android:toAlpha="1.0" />
+</set>
+
+ val titleTextView: TextView = findViewById(R.id.tvTitle)
+ val descriptionTextView: TextView = findViewById(R.id.tvDescription)
+  val fadeInAnimation = AnimationUtils.loadAnimation(this, R.anim.fade_in)
+   val slideUpAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_up)
+   titleTextView.startAnimation(fadeInAnimation)
+ descriptionTextView.startAnimation(slideUpAnimation)
+
+
+SMS & WHATSAPP
+
+private fun sendSMS() {
+        try {
+            val smsIntent = Intent(Intent.ACTION_VIEW)
+            smsIntent.data = Uri.parse("sms:$phoneNumber")
+            smsIntent.putExtra("sms_body", "Hello from my app!")
+            startActivity(smsIntent)
+            Toast.makeText(this, "Opening SMS to $phoneNumber", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Unable to open SMS app", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+private fun openWhatsApp() {
+        try {
+            val uri = Uri.parse("https://api.whatsapp.com/send?phone=+91$phoneNumber")
+            val whatsappIntent = Intent(Intent.ACTION_VIEW, uri)
+            startActivity(whatsappIntent)
+            Toast.makeText(this, "Opening WhatsApp for $phoneNumber", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "WhatsApp not installed or unable to open", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+ <uses-permission android:name="android.permission.SEND_SMS"/>
+ <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+private val SMS_PERMISSION_REQUEST_CODE = 101
+private fun receiveSMS() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.SEND_SMS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.SEND_SMS),
+                SMS_PERMISSION_REQUEST_CODE
+            )
+        } else {
+            try {
+                val smsManager = SmsManager.getDefault()
+                smsManager.sendTextMessage(
+                    phoneNumber,
+                    null,
+                    "Request to receive SMS from app",
+                    null,
+                    null
+                )
+                Toast.makeText(
+                    this,
+                    "Request sent to $phoneNumber to send SMS back",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this,
+                    "Failed to send SMS request: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == SMS_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                receiveSMS()
+            } else {
+                Toast.makeText(
+                    this,
+                    "SMS permission denied. Cannot request SMS.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+Camera:
+ <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="true"/>
+ private val CAMERA_PERMISSION_CODE = 101
+    private val CAMERA_REQUEST_CODE = 102
+ captureButton.setOnClickListener {
+            if (checkCameraPermission()) {
+                openCamera()
+            } else {
+                requestCameraPermission()
+            }
+        }
+ private fun checkCameraPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestCameraPermission() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.CAMERA),
+            CAMERA_PERMISSION_CODE
+        )
+    }
+
+    private fun openCamera() {
+        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        startActivityForResult(cameraIntent, CAMERA_REQUEST_CODE)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == CAMERA_PERMISSION_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                openCamera()
+            } else {
+                Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == CAMERA_REQUEST_CODE && resultCode == RESULT_OK) {
+            val imageBitmap = data?.extras?.get("data") as Bitmap
+            imageView.setImageBitmap(imageBitmap)
+        }
+    }
+
+
+Bluetooth:
+
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    
+private val BLUETOOTH_PERMISSION_CODE = 103
+    private val BLUETOOTH_ENABLE_REQUEST_CODE = 104
+  private lateinit var bluetoothButton: Button
+   
+  private lateinit var bluetoothButton: Button
+    
+
+setupBluetooth()
+       
+
+ override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == CAMERA_REQUEST_CODE && resultCode == RESULT_OK) {
+            val imageBitmap = data?.extras?.get("data") as Bitmap
+            imageView.setImageBitmap(imageBitmap)
+        } else if (requestCode == BLUETOOTH_ENABLE_REQUEST_CODE && resultCode == RESULT_OK) {
+            bluetoothButton.text = "Turn OFF Bluetooth"
+            Toast.makeText(this, "Bluetooth turned on", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun setupBluetooth() {
+        val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        bluetoothAdapter = bluetoothManager.adapter
+        bluetoothButton = findViewById(R.id.bluetoothButton)
+
+        try {
+            bluetoothButton.text = if (bluetoothAdapter.isEnabled) "Turn OFF Bluetooth" else "Turn ON Bluetooth"
+        } catch (e: SecurityException) {
+            bluetoothButton.text = "Bluetooth (Permission Required)"
+        }
+
+        bluetoothButton.setOnClickListener {
+            if (bluetoothAdapter == null) {
+                Toast.makeText(this, "Device doesn't support Bluetooth", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) ==
+                    PackageManager.PERMISSION_GRANTED) {
+                    val intent = Intent(Settings.ACTION_BLUETOOTH_SETTINGS)
+                    startActivity(intent)
+                    Toast.makeText(this, "Please toggle Bluetooth in settings", Toast.LENGTH_SHORT).show()
+                } else {
+                    ActivityCompat.requestPermissions(
+                        this,
+                        arrayOf(Manifest.permission.BLUETOOTH_CONNECT),
+                        BLUETOOTH_PERMISSION_CODE
+                    )
+                }
+            } else {
+                try {
+                    if (bluetoothAdapter.isEnabled) {
+                        bluetoothAdapter.disable()
+                        Toast.makeText(this, "Bluetooth turned off", Toast.LENGTH_SHORT).show()
+                        bluetoothButton.text = "Turn ON Bluetooth"
+                    } else {
+                        val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                        startActivityForResult(enableBtIntent, BLUETOOTH_ENABLE_REQUEST_CODE)
+                    }
+                } catch (e: SecurityException) {
+                    Toast.makeText(this, "Bluetooth permission required", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+
+WIFI:
+<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    private lateinit var wifiButton: Button
+    private lateinit var wifiButton: Button
+        setupWifi()
+private fun setupWifi() {
+        wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        wifiButton = findViewById(R.id.wifiButton)
+
+        wifiButton.text = if (wifiManager.isWifiEnabled) "Turn OFF WiFi" else "Turn ON WiFi"
+
+        wifiButton.setOnClickListener {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val intent = Intent(Settings.ACTION_WIFI_SETTINGS)
+                startActivity(intent)
+                Toast.makeText(this, "Please toggle WiFi in settings", Toast.LENGTH_SHORT).show()
+            } else {
+                try {
+                    wifiManager.isWifiEnabled = !wifiManager.isWifiEnabled
+                    Toast.makeText(
+                        this,
+                        if (wifiManager.isWifiEnabled) "WiFi turned on" else "WiFi turned off",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } catch (e: SecurityException) {
+                    Toast.makeText(this, "Cannot toggle WiFi", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            wifiButton.text = if (wifiManager.isWifiEnabled) "Turn OFF WiFi" else "Turn ON WiFi"
+        }
+    }
