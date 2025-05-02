@@ -3,82 +3,146 @@ package com.example.terminal
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import androidx.activity.enableEdgeToEdge
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import org.json.JSONArray
+import org.json.JSONObject
 
 class SharedPrefActivity : AppCompatActivity() {
     private lateinit var name: EditText
     private lateinit var age: EditText
     private lateinit var save: Button
     private lateinit var delete: Button
-    private lateinit var result: TextView
+    private lateinit var tableLayout: TableLayout
     private lateinit var sharedPrefs: SharedPreferences
+
+    private val PREF_KEY = "user_list"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_shared_pref)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
 
-        name = findViewById(R.id.editTextText)
-        age = findViewById(R.id.editTextText2)
-        save = findViewById(R.id.button5)
-        delete = findViewById(R.id.buttonClear)
-        result = findViewById(R.id.textView)
+        name = findViewById(R.id.editTextName)
+        age = findViewById(R.id.editTextAge)
+        save = findViewById(R.id.buttonAdd)
+        delete = findViewById(R.id.buttonDelete)
+        tableLayout = findViewById(R.id.tableLayout)
 
         sharedPrefs = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
 
-        var savedname=sharedPrefs.getString("name"," ")
-        var savedage=sharedPrefs.getString("age"," ")
-        result.text="name:$savedname age:$savedage"
+        displayAllUsers()
 
-        save.setOnClickListener{
-            showalert()
+        save.setOnClickListener {
+            showAlertToSave()
         }
 
-        delete.setOnClickListener{
-            with(sharedPrefs.edit()){
-                clear()
-                apply()
-            }
-            name.text.clear()
-            age.text.clear()
+        delete.setOnClickListener {
+            showAlertToDelete()
         }
-
-
     }
-    private fun showalert(){
-        var builer= AlertDialog.Builder(this)
-        builer.setTitle("conform")
-        builer.setMessage("want to save")
-        builer.setPositiveButton("Yes") { _, _ ->
-            savsData()
+
+    private fun showAlertToSave() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Confirm")
+        builder.setMessage("Do you want to save or update this entry?")
+        builder.setPositiveButton("Yes") { _, _ ->
+            saveData()
         }
-        builer.setNegativeButton("No"){dialog,_->
+        builder.setNegativeButton("No") { dialog, _ ->
             dialog.dismiss()
         }
-        builer.create().show()
+        builder.create().show()
     }
 
-    private fun savsData(){
-        var currname=name.text.toString()
-        var currage=age.text.toString()
-
-        with(sharedPrefs.edit()){
-            putString("name",currname)
-            putString("age",currage)
-            apply()
-
+    private fun showAlertToDelete() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Delete Entry")
+        builder.setMessage("Enter name to delete:")
+        val input = EditText(this)
+        builder.setView(input)
+        builder.setPositiveButton("Delete") { _, _ ->
+            val toDelete = input.text.toString()
+            deleteEntry(toDelete)
         }
-        result.text="name:$currname age:$currage"
+        builder.setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
+        builder.create().show()
     }
+
+    private fun saveData() {
+        val currName = name.text.toString()
+        val currAge = age.text.toString()
+
+        val data = JSONArray(sharedPrefs.getString(PREF_KEY, "[]"))
+
+        var updated = false
+
+        for (i in 0 until data.length()) {
+            val obj = data.getJSONObject(i)
+            if (obj.getString("name") == currName) {
+                obj.put("age", currAge)
+                updated = true
+                break
+            }
+        }
+
+        if (!updated) {
+            val newUser = JSONObject()
+            newUser.put("name", currName)
+            newUser.put("age", currAge)
+            data.put(newUser)
+        }
+
+        sharedPrefs.edit().putString(PREF_KEY, data.toString()).apply()
+        displayAllUsers()
+        name.text.clear()
+        age.text.clear()
     }
+
+    private fun deleteEntry(nameToDelete: String) {
+        val data = JSONArray(sharedPrefs.getString(PREF_KEY, "[]"))
+        val newArray = JSONArray()
+
+        for (i in 0 until data.length()) {
+            val obj = data.getJSONObject(i)
+            if (obj.getString("name") != nameToDelete) {
+                newArray.put(obj)
+            }
+        }
+
+        sharedPrefs.edit().putString(PREF_KEY, newArray.toString()).apply()
+        displayAllUsers()
+    }
+
+    private fun displayAllUsers() {
+        tableLayout.removeAllViews() // Clear previous views
+
+        val data = JSONArray(sharedPrefs.getString(PREF_KEY, "[]"))
+
+        // Add headers for the table
+        val headerRow = TableRow(this)
+        val nameHeader = TextView(this)
+        nameHeader.text = "Name"
+        val ageHeader = TextView(this)
+        ageHeader.text = "Age"
+        headerRow.addView(nameHeader)
+        headerRow.addView(ageHeader)
+        tableLayout.addView(headerRow)
+
+        // Add data rows for each user
+        for (i in 0 until data.length()) {
+            val obj = data.getJSONObject(i)
+            val row = TableRow(this)
+
+            val nameText = TextView(this)
+            nameText.text = obj.getString("name")
+            row.addView(nameText)
+
+            val ageText = TextView(this)
+            ageText.text = obj.getString("age")
+            row.addView(ageText)
+
+            tableLayout.addView(row)
+        }
+    }
+}
